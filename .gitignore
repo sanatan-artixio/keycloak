@@ -69,8 +69,7 @@ themes/custom/
 providers/custom/
 
 # Configuration files with credentials
-keycloak-deployment.yaml
-cloud-config.yaml
+k8s-cloud.yaml
 docker-compose.yml
 
 # Database dumps

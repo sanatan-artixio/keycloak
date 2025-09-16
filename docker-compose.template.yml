@@ -1,0 +1,45 @@
+services:
+  keycloak:
+    build: .
+    container_name: artixio-keycloak
+    ports:
+      - "8443:8443"  # HTTPS port for production
+      - "9000:9000"  # Management/health endpoints
+    environment:
+      # Database configuration (PostgreSQL on local machine)
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://host.docker.internal:5432/keycloak
+      KC_DB_USERNAME: YOUR_DB_USERNAME
+      KC_DB_PASSWORD: YOUR_DB_PASSWORD
+      
+      # Keycloak admin user (updated to new format)
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: YOUR_ADMIN_PASSWORD
+      
+      # Production HTTPS configuration
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: true
+      KC_HTTP_ENABLED: false
+      KC_HOSTNAME_STRICT_HTTPS: true
+      
+      # Performance and monitoring
+      KC_LOG_LEVEL: INFO
+      KC_METRICS_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      
+    extra_hosts:
+      # This allows the container to connect to localhost services
+      - "host.docker.internal:host-gateway"
+    
+    # Set memory limit as recommended by official docs
+    mem_limit: 2g
+    
+    # Start in production mode with optimized flag
+    command: ["start", "--optimized", "--hostname=https://localhost:8443"]
+    
+    networks:
+      - keycloak-network
+
+networks:
+  keycloak-network:
+    driver: bridge
