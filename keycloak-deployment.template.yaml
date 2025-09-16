@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-deployment
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: keycloak/keycloak:latest
+        ports:
+        - containerPort: 8080
+          name: app
+          protocol: TCP
+        env:
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_DB_URL
+          value: "jdbc:postgresql://postgres-arm-prod-database-service.database:5432/keycloak"
+        - name: KC_DB_USERNAME
+          value: "YOUR_DB_USERNAME"
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-db-secret
+              key: password
+        - name: KEYCLOAK_ADMIN
+          value: "admin"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-admin-secret
+              key: password
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+        - name: KC_HOSTNAME_STRICT_HTTPS
+          value: "false"
+        - name: KC_LOG_LEVEL
+          value: "INFO"
+        - name: KC_METRICS_ENABLED
+          value: "true"
+        - name: KC_HEALTH_ENABLED
+          value: "true"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_CACHE
+          value: "ispn"
+        - name: KC_HOSTNAME_STRICT_BACKCHANNEL
+          value: "true"
+        - name: JAVA_OPTS
+          value: "-Xms64m -Xmx1536m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true -Djgroups.dns.query=keycloak.service -Dquarkus.datasource.jdbc.max-lifetime=20H"
+        - name: KC_HOSTNAME
+        - name: KC_HOSTNAME_URL
+          value: "https://keycloak.your-domain.com"
+        - name: DB_HOST
+          value: "postgres-arm-prod-database-service.database"
+        command:
+        - "/opt/keycloak/bin/kc.sh"
+        args:
+        - "start-dev"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-service
+  labels:
+    app: keycloak
+spec:
+  type: ClusterIP
+  ports:
+  - name: app
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: keycloak
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-db-secret
+type: Opaque
+stringData:
+  password: "YOUR_DB_PASSWORD"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-admin-secret
+type: Opaque
+stringData:
+  password: "YOUR_ADMIN_PASSWORD"

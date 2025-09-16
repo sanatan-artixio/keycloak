@@ -32,26 +32,6 @@ services:
       # This allows the container to connect to localhost services
       - "host.docker.internal:host-gateway"
     
-    depends_on:
-      - postgres-check
-    
-    networks:
-      - keycloak-network
-
-  # Service to check if local PostgreSQL is accessible
-  postgres-check:
-    image: postgres:15-alpine
-    container_name: postgres-check
-    command: >
-      sh -c "
-        echo 'Checking PostgreSQL connection...' &&
-        pg_isready -h host.docker.internal -p 5432 -U sanatanupmanyu &&
-        echo 'PostgreSQL is ready!'
-      "
-    environment:
-      PGPASSWORD: ksDq2jazKmxxzv.VxXbkwR6Uxz
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - keycloak-network
 
