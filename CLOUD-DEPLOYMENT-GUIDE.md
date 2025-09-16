@@ -79,11 +79,36 @@ docker push your-registry/keycloak-artixio:latest
 ```
 
 ### Step 2: Deploy to Kubernetes
-```bash
-# Apply your Kubernetes configuration
-# (Replace with your actual Kubernetes deployment method)
-kubectl apply -f your-keycloak-deployment.yaml
+Your deployment uses a service mesh architecture with external HTTPS termination. Use the configuration from your k8s-cloud.yaml:
+
+```yaml
+# Key configuration for your service mesh setup:
+args:
+  enabled: true
+  value:
+    - start
+    - --optimized
+
+ContainerPort:
+  - name: app
+    port: 8080          # Keycloak internal HTTP port
+    servicePort: 80     # Service port for internal communication
+
+# Environment variables enable HTTP internally while maintaining HTTPS externally
+EnvVariables:
+  - name: KC_HTTP_ENABLED
+    value: "true"       # Enable HTTP for internal service mesh communication
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "false"      # Allow HTTP internally, HTTPS handled by service mesh
+  - name: KC_PROXY
+    value: edge         # Handle X-Forwarded headers from service mesh
 ```
+
+**Architecture:**
+- **Container**: Runs HTTP on port 8080
+- **Service**: Exposes port 80 for internal service communication
+- **Service Mesh**: Handles HTTPS termination and forwards to port 80
+- **External URL**: https://keycloak.artixio.com (HTTPS handled by your routing layer)
 
 ### Step 3: Verify Database Connection
 Ensure your PostgreSQL service is accessible and the `keycloak` database exists:

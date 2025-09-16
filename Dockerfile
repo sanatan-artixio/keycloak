@@ -27,14 +27,14 @@ RUN /opt/keycloak/bin/kc.sh build
 FROM quay.io/keycloak/keycloak:latest
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
-# Set production environment variables
+# Set production environment variables for service mesh architecture
 ENV KC_DB=postgres
-ENV KC_HOSTNAME_STRICT=true
-ENV KC_HOSTNAME_STRICT_HTTPS=true
-ENV KC_HTTP_ENABLED=false
+ENV KC_HOSTNAME_STRICT=false
+ENV KC_HOSTNAME_STRICT_HTTPS=false
+ENV KC_HTTP_ENABLED=true
 
-# Expose HTTPS and metrics ports (no HTTP in production)
-EXPOSE 8443 9000
+# Expose HTTP and metrics ports (HTTPS handled by service mesh)
+EXPOSE 8080 9000
 
 # Set the entrypoint to enable all distribution sub-commands
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
