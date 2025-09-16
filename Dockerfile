@@ -32,8 +32,6 @@ ENV KC_DB=postgres
 ENV KC_HOSTNAME_STRICT=true
 ENV KC_HOSTNAME_STRICT_HTTPS=true
 ENV KC_HTTP_ENABLED=false
-ENV KC_HTTPS_KEY_STORE_FILE=/opt/keycloak/conf/server.keystore
-ENV KC_HTTPS_KEY_STORE_PASSWORD=password
 
 # Expose HTTPS and metrics ports (no HTTP in production)
 EXPOSE 8443 9000
